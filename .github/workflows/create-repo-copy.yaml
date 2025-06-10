@@ -32,7 +32,6 @@ jobs:
 
         echo "TARGET_REPO=$OWNER/$REPO_NAME" >> $GITHUB_ENV
         echo "TARGET_GITOPS_REPO=$OWNER/$TARGET_GITOPS_REPO" >> $GITHUB_ENV
-        echo "Repository to be created: $OWNER/$REPO_NAME"
 
     - name: Clone current repo into temp dir
       run: |
@@ -44,13 +43,6 @@ jobs:
       run: |
         cd temp-repo
         gh repo create "$TARGET_REPO" --public --source=. --push
-        sleep 5
-        gh repo view "$TARGET_REPO" || exit 1
-
-    - name: Debug secret lengths
-      run: |
-        echo "AKS_NAME length: ${#{{ secrets.AKS_NAME }}}"
-        echo "AZURE_CREDENTIALS length: ${#{{ secrets.AZURE_CREDENTIALS }}}"
 
     - name: Set secrets in new repo
       run: |
@@ -60,17 +52,18 @@ jobs:
         gh secret set AZ_ACR_NAME --body "${{ secrets.AZ_ACR_NAME }}" --repo "$TARGET_REPO"
         gh secret set MANIFESTS_BRANCH --body "${{ secrets.MANIFESTS_BRANCH }}" --repo "$TARGET_REPO"
         gh secret set MANIFESTS_FOLDER --body "${{ secrets.MANIFESTS_FOLDER }}" --repo "$TARGET_REPO"
+        gh secret set MANIFESTS_REPO --body "https://github.com/${TARGET_GITOPS_REPO}" --repo "$TARGET_REPO"
         gh secret set PAT --body "${{ secrets.PAT }}" --repo "$TARGET_REPO"
         gh secret set VOTE_APP_TITLE --body "${{ secrets.VOTE_APP_TITLE }}" --repo "$TARGET_REPO"
-        gh secret set MANIFESTS_REPO --body "https://github.com/${TARGET_GITOPS_REPO}" --repo "$TARGET_REPO"
 
-    - name: Create environments and set environment secrets
+    - name: Create environment and set secret
       run: |
-        for env in az-vote-app-dev az-vote-app-stage; do
-          gh api --method PUT "/repos/$TARGET_REPO/environments/$env"
-          gh secret set ENVIRONMENT_NAME --env "$env" --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
-          gh secret set TARGET_NAMESPACE --env "$env" --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
-        done
+        gh api --method PUT "/repos/$TARGET_REPO/environments/az-vote-app-dev"
+        gh secret set ENVIRONMENT_NAME --env az-vote-app-dev --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
+        gh secret set TARGET_NAMESPACE --env az-vote-app-dev --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
+        gh api --method PUT "/repos/$TARGET_REPO/environments/az-vote-app-stage"
+        gh secret set ENVIRONMENT_NAME --env az-vote-app-stage --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
+        gh secret set TARGET_NAMESPACE --env az-vote-app-stage --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
 
     - name: Clone gitops repo into temp dir
       run: |
