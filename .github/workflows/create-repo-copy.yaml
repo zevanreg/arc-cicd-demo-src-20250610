@@ -22,6 +22,7 @@ jobs:
         CURRENT_REPO=$(basename "$GITHUB_REPOSITORY")
         OWNER=$(cut -d'/' -f1 <<< "$GITHUB_REPOSITORY")
         DEFAULT_NAME="${CURRENT_REPO}-${DATE}"
+        TARGET_GITOPS_REPO="$GITOPS_REPO-${DATE}"
 
         if [ -z "${{ github.event.inputs.new_repo_name }}" ]; then
           REPO_NAME="$DEFAULT_NAME"
@@ -30,7 +31,7 @@ jobs:
         fi
 
         echo "TARGET_REPO=$OWNER/$REPO_NAME" >> $GITHUB_ENV
-        echo "TARGET_GITOPS_REPO=${{ env.GITOPS_REPO }}-${DATE}" >> $GITHUB_ENV
+        echo "TARGET_GITOPS_REPO=$TARGET_GITOPS_REPO" >> $GITHUB_ENV
 
     - name: Clone current repo into temp dir
       run: |
