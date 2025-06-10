@@ -1,0 +1,64 @@
+name: Clone and Configure Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_repo_name:
+        description: 'Optional: Name of the new repository'
+        required: false
+
+jobs:
+  clone-and-configure:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.ADMIN_PAT }}
+
+    steps:
+    - name: Set dynamic repo name
+      id: set-name
+      run: |
+        DATE=$(date +%Y%m%d)
+        CURRENT_REPO=$(basename "$GITHUB_REPOSITORY")
+        OWNER=$(cut -d'/' -f1 <<< "$GITHUB_REPOSITORY")
+        DEFAULT_NAME="${CURRENT_REPO}-${DATE}"
+
+        if [ -z "${{ github.event.inputs.new_repo_name }}" ]; then
+          REPO_NAME="$DEFAULT_NAME"
+        else
+          REPO_NAME="${{ github.event.inputs.new_repo_name }}"
+        fi
+
+        echo "TARGET_REPO=$OWNER/$REPO_NAME" >> $GITHUB_ENV
+
+    - name: Clone current repo into temp dir
+      run: |
+        git clone https://github.com/${GITHUB_REPOSITORY}.git temp-repo
+        cd temp-repo
+        git remote remove origin
+
+    - name: Create new repo from temp dir
+      run: |
+        cd temp-repo
+        gh repo create "$TARGET_REPO" --public --source=. --push
+
+    - name: Set secrets in new repo
+      run: |
+        gh secret set AKS_NAME --body "${{ secrets.AKS_NAME }}" --repo "$TARGET_REPO"
+        gh secret set AKS_RESOURCE_GROUP --body "${{ secrets.AKS_RESOURCE_GROUP }}" --repo "$TARGET_REPO"
+        gh secret set AZURE_CREDENTIALS --body "${{ secrets.AZURE_CREDENTIALS }}" --repo "$TARGET_REPO"
+        gh secret set AZ_ACR_NAME --body "${{ secrets.AZ_ACR_NAME }}" --repo "$TARGET_REPO"
+        gh secret set MANIFESTS_BRANCH --body "${{ secrets.MANIFESTS_BRANCH }}" --repo "$TARGET_REPO"
+        gh secret set MANIFESTS_FOLDER --body "${{ secrets.MANIFESTS_FOLDER }}" --repo "$TARGET_REPO"
+        gh secret set MANIFESTS_REPO --body "${{ secrets.MANIFESTS_REPO }}" --repo "$TARGET_REPO"
+        gh secret set PAT --body "${{ secrets.PAT }}" --repo "$TARGET_REPO"
+        gh secret set VOTE_APP_TITLE --body "${{ secrets.VOTE_APP_TITLE }}" --repo "$TARGET_REPO"
+
+    - name: Create environment and set secret
+      run: |
+        gh api --method PUT "/repos/$TARGET_REPO/environments/az-vote-app-dev"
+        gh secret set ENVIRONMENT_NAME --env az-vote-app-dev --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
+        gh secret set TARGET_NAMESPACE --env az-vote-app-dev --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
+        gh api --method PUT "/repos/$TARGET_REPO/environments/az-vote-app-stage"
+        gh secret set ENVIRONMENT_NAME --env az-vote-app-stage --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
+        gh secret set TARGET_NAMESPACE --env az-vote-app-stage --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
+
