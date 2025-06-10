@@ -52,7 +52,7 @@ jobs:
         gh secret set AZ_ACR_NAME --body "${{ secrets.AZ_ACR_NAME }}" --repo "$TARGET_REPO"
         gh secret set MANIFESTS_BRANCH --body "${{ secrets.MANIFESTS_BRANCH }}" --repo "$TARGET_REPO"
         gh secret set MANIFESTS_FOLDER --body "${{ secrets.MANIFESTS_FOLDER }}" --repo "$TARGET_REPO"
-        gh secret set MANIFESTS_REPO --body "${{ secrets.MANIFESTS_REPO }}" --repo "$TARGET_REPO"
+        gh secret set MANIFESTS_REPO --body "https://github.com/${TARGET_GITOPS_REPO}" --repo "$TARGET_REPO"
         gh secret set PAT --body "${{ secrets.PAT }}" --repo "$TARGET_REPO"
         gh secret set VOTE_APP_TITLE --body "${{ secrets.VOTE_APP_TITLE }}" --repo "$TARGET_REPO"
 
