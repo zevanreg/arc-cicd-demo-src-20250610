@@ -22,7 +22,7 @@ jobs:
         CURRENT_REPO=$(basename "$GITHUB_REPOSITORY")
         OWNER=$(cut -d'/' -f1 <<< "$GITHUB_REPOSITORY")
         DEFAULT_NAME="${CURRENT_REPO}-${DATE}"
-        TARGET_GITOPS_REPO="$GITOPS_REPO-${DATE}"
+        TARGET_GITOPS_REPO="${GITOPS_REPO}-${DATE}"
 
         if [ -z "${{ github.event.inputs.new_repo_name }}" ]; then
           REPO_NAME="$DEFAULT_NAME"
@@ -65,13 +65,13 @@ jobs:
         gh secret set ENVIRONMENT_NAME --env az-vote-app-stage --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
         gh secret set TARGET_NAMESPACE --env az-vote-app-stage --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
 
-    - name: Clone current repo into temp dir
+    - name: Clone gitops repo into temp dir
       run: |
         git clone https://github.com/${TARGET_GITOPS_REPO}.git temp-gitops-repo
         cd temp-gitops-repo
         git remote remove origin
 
-    - name: Create new repo from temp dir
+    - name: Create new gitops repo from temp dir
       run: |
         cd temp-gitops-repo
         gh repo create "$TARGET_GITOPS_REPO" --public --source=. --push
