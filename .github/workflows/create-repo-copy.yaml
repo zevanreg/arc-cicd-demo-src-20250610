@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.ADMIN_PAT }}
-      GITOPS_REPO: "Azure/arc-cicd-demo-gitops"
+      GITOPS_REPO: "arc-cicd-demo-gitops"
 
     steps:
     - name: Set dynamic repo name
@@ -31,7 +31,7 @@ jobs:
         fi
 
         echo "TARGET_REPO=$OWNER/$REPO_NAME" >> $GITHUB_ENV
-        echo "TARGET_GITOPS_REPO=$TARGET_GITOPS_REPO" >> $GITHUB_ENV
+        echo "TARGET_GITOPS_REPO=$OWNER/$TARGET_GITOPS_REPO" >> $GITHUB_ENV
 
     - name: Clone current repo into temp dir
       run: |
@@ -67,7 +67,7 @@ jobs:
 
     - name: Clone gitops repo into temp dir
       run: |
-        git clone https://github.com/${GITOPS_REPO}.git temp-gitops-repo
+        git clone https://github.com/Azure/${GITOPS_REPO}.git temp-gitops-repo
         cd temp-gitops-repo
         git remote remove origin
 
@@ -75,4 +75,3 @@ jobs:
       run: |
         cd temp-gitops-repo
         gh repo create "$TARGET_GITOPS_REPO" --public --source=. --push
-
