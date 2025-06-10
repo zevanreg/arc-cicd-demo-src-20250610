@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.ADMIN_PAT }}
+      GITOPS_REPO: "Azure/arc-cicd-demo-gitops"
 
     steps:
     - name: Set dynamic repo name
@@ -29,6 +30,7 @@ jobs:
         fi
 
         echo "TARGET_REPO=$OWNER/$REPO_NAME" >> $GITHUB_ENV
+        echo "TARGET_GITOPS_REPO=${{ env.GITOPS_REPO }}-${DATE}" >> $GITHUB_ENV
 
     - name: Clone current repo into temp dir
       run: |
@@ -61,4 +63,15 @@ jobs:
         gh api --method PUT "/repos/$TARGET_REPO/environments/az-vote-app-stage"
         gh secret set ENVIRONMENT_NAME --env az-vote-app-stage --body "${{ secrets.ENVIRONMENT_NAME }}" --repo "$TARGET_REPO"
         gh secret set TARGET_NAMESPACE --env az-vote-app-stage --body "${{ secrets.TARGET_NAMESPACE }}" --repo "$TARGET_REPO"
+
+    - name: Clone current repo into temp dir
+      run: |
+        git clone https://github.com/${TARGET_GITOPS_REPO}.git temp-gitops-repo
+        cd temp-gitops-repo
+        git remote remove origin
+
+    - name: Create new repo from temp dir
+      run: |
+        cd temp-gitops-repo
+        gh repo create "$TARGET_GITOPS_REPO" --public --source=. --push
 
