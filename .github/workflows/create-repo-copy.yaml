@@ -67,7 +67,7 @@ jobs:
 
     - name: Clone gitops repo into temp dir
       run: |
-        git clone https://github.com/${TARGET_GITOPS_REPO}.git temp-gitops-repo
+        git clone https://github.com/${GITOPS_REPO}.git temp-gitops-repo
         cd temp-gitops-repo
         git remote remove origin
 
